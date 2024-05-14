@@ -25,6 +25,8 @@ data "aws_vpc" "example_vpc" {
 # Data source to fetch details about subnets in the VPC
 data "aws_subnet" "example_subnets" {
   vpc_id = data.aws_vpc.example_vpc.id
+  cidr_block = "10.0.0.0/16" 
+  availability_zone = "ap-south-1a"
 }
 
 # Data source to fetch details about route tables associated with the VPC
