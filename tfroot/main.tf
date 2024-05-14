@@ -76,6 +76,7 @@ output "network_details" {
     "Route Table IDs", "",
     join(", ", data.aws_route_tables.example_route_tables.ids),
     "NAT Gateway IDs", "",
-    join(", ", data.aws_nat_gateway.example_nat_gateways.ids)
+    join(", ", data.aws_nat_gateway.example_nat_gateways[*].id)  # Corrected attribute to "id"
   )
 }
+
