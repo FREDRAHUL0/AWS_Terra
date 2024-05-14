@@ -1,6 +1,3 @@
-provider "aws" {
-  region = "ap-south-1"  
-
 # Data source to fetch details about the target group
 data "aws_lb_target_group" "example_target_group" {
   name = "terra-ALB-Tg"  
