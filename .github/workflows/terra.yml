@@ -9,8 +9,7 @@ on:
         type: choice
         
 
-permissions:
-  contents: 'read'
+
  
 jobs:
   aws_action:
