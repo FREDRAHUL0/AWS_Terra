@@ -6,7 +6,6 @@ data "aws_lb_target_group" "example_target_group" {
 # Data source to fetch details about the load balancer associated with the target group
 data "aws_lb" "example_alb" {
   arn = element(tolist(data.aws_lb_target_group.example_target_group.load_balancer_arns), 0)
-
 }
 
 # Output the ARN and DNS name of the ALB associated with the target group
@@ -46,12 +45,6 @@ output "subnet_ids" {
   value = data.aws_subnet.example_subnets.ids
 }
 
-
-# Output the internet gateway ID
-output "internet_gateway_id" {
-  value = data.aws_internet_gateway.example_igw.id
-}
-
 # Output the route table IDs
 output "route_table_ids" {
   value = data.aws_route_tables.example_route_tables.ids
@@ -61,5 +54,3 @@ output "route_table_ids" {
 output "nat_gateway_id" {
   value = data.aws_nat_gateway.example_nat_gateways.id
 }
-
-
