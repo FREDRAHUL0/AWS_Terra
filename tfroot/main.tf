@@ -5,7 +5,8 @@ data "aws_lb_target_group" "example_target_group" {
 
 # Data source to fetch details about the load balancer associated with the target group
 data "aws_lb" "example_alb" {
-  arn = element(data.aws_lb_target_group.example_target_group.load_balancer_arns, 0)
+  arn = element(tolist(data.aws_lb_target_group.example_target_group.load_balancer_arns), 0)
+
 }
 
 # Output the ARN and DNS name of the ALB associated with the target group
