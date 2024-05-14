@@ -24,13 +24,13 @@ data "aws_vpc" "example_vpc" {
 }
 
 # Data source to fetch details about subnets in the VPC
-data "aws_subnet_ids" "example_subnets" {
+data "aws_subnet" "example_subnets" {
   vpc_id = data.aws_vpc.example_vpc.id
 }
 
 # Data source to fetch details about the internet gateway attached to the VPC
 data "aws_internet_gateway" "example_igw" {
-  vpc_id = data.aws_vpc.example_vpc.id
+  data "aws_internet_gateway" "example_igw" {}
 }
 
 # Data source to fetch details about route tables associated with the VPC
@@ -62,7 +62,8 @@ output "route_table_ids" {
 }
 
 # Output the NAT gateway IDs
-output "nat_gateway_ids" {
-  value = data.aws_nat_gateway.example_nat_gateways.ids
+output "nat_gateway_id" {
+  value = data.aws_nat_gateway.example_nat_gateways.id
 }
+
 
