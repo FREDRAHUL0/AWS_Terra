@@ -17,3 +17,52 @@ output "alb_arn" {
 output "alb_dns_name" {
   value = data.aws_lb.example_alb.dns_name
 }
+
+# Data source to fetch details about the VPC
+data "aws_vpc" "example_vpc" {
+  id = "vpc-0a0acf0ecf627f980"  
+}
+
+# Data source to fetch details about subnets in the VPC
+data "aws_subnet_ids" "example_subnets" {
+  vpc_id = data.aws_vpc.example_vpc.id
+}
+
+# Data source to fetch details about the internet gateway attached to the VPC
+data "aws_internet_gateway" "example_igw" {
+  vpc_id = data.aws_vpc.example_vpc.id
+}
+
+# Data source to fetch details about route tables associated with the VPC
+data "aws_route_tables" "example_route_tables" {
+  vpc_id = data.aws_vpc.example_vpc.id
+}
+
+# Data source to fetch details about NAT gateways associated with the VPC
+data "aws_nat_gateway" "example_nat_gateways" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.example_vpc.id]
+  }
+}
+
+# Output the subnet IDs
+output "subnet_ids" {
+  value = data.aws_subnet_ids.example_subnets.ids
+}
+
+# Output the internet gateway ID
+output "internet_gateway_id" {
+  value = data.aws_internet_gateway.example_igw.id
+}
+
+# Output the route table IDs
+output "route_table_ids" {
+  value = data.aws_route_tables.example_route_tables.ids
+}
+
+# Output the NAT gateway IDs
+output "nat_gateway_ids" {
+  value = data.aws_nat_gateway.example_nat_gateways.ids
+}
+
