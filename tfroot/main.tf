@@ -1,11 +1,11 @@
 # Data source to fetch details about the target group
 data "aws_lb_target_group" "example_target_group" {
-  name = "terra-ALB-Tg"  
+  name = "terra-ALB-Tg"
 }
 
 # Data source to fetch details about the load balancer associated with the target group
 data "aws_lb" "example_alb" {
-  arn = data.aws_lb_target_group.example_target_group.load_balancers[0].target_group_arn
+  arn = data.aws_lb_target_group.example_target_group.load_balancer_arns[0]
 }
 
 # Output the ARN and DNS name of the ALB associated with the target group
