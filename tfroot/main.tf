@@ -57,3 +57,25 @@ output "route_table_ids" {
 output "nat_gateway_id" {
   value = data.aws_nat_gateway.example_nat_gateways.id
 }
+
+# Output the ARN and DNS name of the ALB associated with the target group in table format
+output "alb_details" {
+  value = format(
+    "| %-20s | %-20s |\n|----------------------|----------------------|\n| %-20s | %-20s |",
+    "ALB ARN", "ALB DNS Name",
+    data.aws_lb.example_alb.arn, data.aws_lb.example_alb.dns_name
+  )
+}
+
+# Output the network details in table format
+output "network_details" {
+  value = format(
+    "| %-20s | %-20s |\n|----------------------|----------------------|\n| %-20s | %-20s |\n| %-20s | %-20s |\n| %-20s | %-20s |\n| %-20s | %-20s |",
+    "Subnet ID", "CIDR Block",
+    data.aws_subnet.example_subnets.id, data.aws_subnet.example_subnets.cidr_block,
+    "Route Table IDs", "",
+    join(", ", data.aws_route_tables.example_route_tables.ids),
+    "NAT Gateway IDs", "",
+    join(", ", data.aws_nat_gateway.example_nat_gateways.ids)
+  )
+}
