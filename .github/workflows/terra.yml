@@ -1,12 +1,9 @@
-name: "AWS Terraform workflow"
+name: Terraform Workflow
+
 on:
-  workflow_dispatch: # Parameterization to make a selection of apply or destroy.
-    inputs:
-      TFACTION:
-        description: "Terraform Action"
-        default: "apply"
-        required: true
-        type: choice
+  push:
+    branches:
+      - main
         
 
 
