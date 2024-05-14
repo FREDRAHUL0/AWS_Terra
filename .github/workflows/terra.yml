@@ -36,8 +36,14 @@ jobs:
       - name: Terraform Init
         run: terraform init 
         working-directory: tfroot # this is directory where all terraform files are
-      - name: Refresh Terraform state
-        run: terraform refresh
+     
+      - name: Terraform Plan
+        run: terraform  plan -input=false
+        working-directory: tfroot
+# Apply the plan if apply parameter selected during run.
+      - name: Terraform Apply
+        run: terraform  apply --auto-approve -input=false
+        working-directory: tfroot
   
 
 
