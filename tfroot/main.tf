@@ -41,9 +41,10 @@ data "aws_nat_gateway" "example_nat_gateways" {
 }
 
 # Output the subnet IDs
-output "subnet_ids" {
-  value = data.aws_subnet.example_subnets.ids
+output "subnet_id" {
+  value = data.aws_subnet.example_subnets.id
 }
+
 
 # Output the route table IDs
 output "route_table_ids" {
