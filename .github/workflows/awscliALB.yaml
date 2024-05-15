@@ -22,7 +22,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-south-1  
 
-      - name: Install AWS CLI
+      - name: Install AWS CLI and jq
         run: |
           sudo apt-get update
           sudo apt-get install -y awscli jq
@@ -104,7 +104,4 @@ jobs:
                   targets=$(aws elbv2 describe-target-health --target-group-arn "$target_group_arn" --query "TargetHealthDescriptions[*].[Target.Id, TargetHealth.State]" --output json)
                   for target in $(echo "$targets" | jq -c '.[]'); do
                       target_id=$(echo "$target" | jq -r '.[0]')
-                      target_state=$(echo "$target" | jq -r '.[1]')
-                      echo "  Target ID: $target_id, State: $target_state"
-                  done
-                  echo ""
+                      target
