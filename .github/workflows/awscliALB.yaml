@@ -30,13 +30,12 @@ jobs:
       - name: Fetch ALB and Target Group Information
         id: fetch_info
         run: |
-          # Replace "your-server-name" with the actual name of your server tag.
-          # Replace "server-tag-key" and "your-server-tag-value" with the actual key and value of your server tag.
-          # For example, if your server tag key is "Name" and its value is "WebServer", replace "Name" with "server-tag-key" and "WebServer" with "your-server-tag-value".
-          instance_ids=$(aws ec2 describe-instances --filters "Name=tag:prod,Values=prod" --query "Reservations[*].Instances[*].InstanceId" --output text)
+          # Replace "prod" with the actual value of the server tag key-value pair.
+          instance_ids=$(aws ec2 describe-instances --filters "Name=tag:Env,Values=prod" --query "Reservations[*].Instances[*].InstanceId" --output text)
 
           # Find the target group ARN based on the instance IDs
-          target_group_arn=$(aws elbv2 describe-target-groups --query "TargetGroups[?contains(Tags[?Key=='server-tag-key' && Value=='your-server-tag-value'], 'true')].TargetGroupArn" --output text)
+          # Replace "server-tag-key" and "your-server-tag-value" with the actual key and value of your server tag.
+          target_group_arn=$(aws elbv2 describe-target-groups --query "TargetGroups[?contains(Tags[?Key=='env' && Value=='prod'], 'true')].TargetGroupArn" --output text)
 
           # Find the load balancers using the target group
           alb_arns=$(aws elbv2 describe-load-balancers --query "LoadBalancers[?contains(TargetGroups[].TargetGroupArn, '$target_group_arn')].{Name: LoadBalancerName, ARN: LoadBalancerArn, DNS: DNSName}" --output json)
