@@ -30,10 +30,10 @@ jobs:
       id: get_alb_details
       run: |
         alb_arn=$(aws elbv2 describe-target-groups --target-group-arns ${{ steps.get_target_group_arn.outputs.target_group_arn }} --query 'TargetGroups[0].LoadBalancerArns[0]' --output text)
-        aws elbv2 describe-load-balancers --load-balancer-arns $alb_arn --output json | jq -r '.LoadBalancers[] | [.LoadBalancerArn, .DNSName, .VpcId, .AvailabilityZones | join(", ")] | @tsv' > alb_details.tsv
+        aws elbv2 describe-load-balancers --load-balancer-arns $alb_arn --query 'LoadBalancers[0].[LoadBalancerArn, DNSName, VpcId, AvailabilityZones]' --output text > alb_details.txt
       
     - name: Display ALB details
       run: |
         echo "ALB Details:"
         echo -e "Load Balancer ARN\tDNS Name\tVPC ID\tAvailability Zones"
-        cat alb_details.tsv
+        cat alb_details.txt
