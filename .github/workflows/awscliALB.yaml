@@ -25,7 +25,7 @@ jobs:
       - name: Install AWS CLI
         run: |
           sudo apt-get update
-          sudo apt-get install -y awscli
+          sudo apt-get install -y awscli jq
 
       - name: Fetch ALB and Target Group Information
         id: fetch_info
@@ -33,7 +33,7 @@ jobs:
           # Replace "prod" with the actual value of the server tag key-value pair.
           instance_ids=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=prod" --query "Reservations[*].Instances[*].InstanceId" --output json)
 
-          if [ -z "$instance_ids" ]; then
+          if [ -z "$instance_ids" ] || [ "$instance_ids" == "null" ]; then
             echo "No instances found with the provided tag key-value pair."
             exit 1
           fi
@@ -58,13 +58,13 @@ jobs:
           for alb_arn in $(echo "$alb_arns" | jq -r '.[].ARN'); do
               https_listeners=$(aws elbv2 describe-listeners --load-balancer-arn "$alb_arn" --query "Listeners[?Port==\`443\`]" --output json)
 
-              alb_name=$(echo "$alb_arns" | jq -r ".[] | select(.ARN == \"$alb_arn\").Name")
-              alb_dns=$(echo "$alb_arns" | jq -r ".[] | select(.ARN == \"$alb_arn\").DNS")
-              
               if [ -z "$https_listeners" ] || [ "$https_listeners" == "null" ]; then
                 echo "No HTTPS listeners found for ALB $alb_name."
                 continue
               fi
+
+              alb_name=$(echo "$alb_arns" | jq -r ".[] | select(.ARN == \"$alb_arn\").Name")
+              alb_dns=$(echo "$alb_arns" | jq -r ".[] | select(.ARN == \"$alb_arn\").DNS")
 
               for listener in $(echo "$https_listeners" | jq -c '.[]'); do
                   listener_port=$(echo "$listener" | jq -r '.Port')
@@ -108,5 +108,3 @@ jobs:
                       echo "  Target ID: $target_id, State: $target_state"
                   done
                   echo ""
-              done
-          done
