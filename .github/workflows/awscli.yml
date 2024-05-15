@@ -30,13 +30,14 @@ jobs:
       id: get_alb_details
       run: |
         alb_arn=$(aws elbv2 describe-target-groups --target-group-arns ${{ env.TARGET_GROUP_ARN }} --query 'TargetGroups[0].LoadBalancerArns[0]' --output text)
+        echo "::set-env name=ALB_ARN::$alb_arn"
         aws elbv2 describe-load-balancers --load-balancer-arns $alb_arn --query 'LoadBalancers[0].[LoadBalancerArn, DNSName, VpcId, AvailabilityZones]' --output text > alb_details.txt
       
     - name: Get VPC details
       id: get_vpc_details
       run: |
         vpc_id=$(awk '{print $3}' alb_details.txt)
-        aws ec2 describe-vpcs --vpc-ids $vpc_id --query 'Vpcs[0].[VpcId, CidrBlock]' --output text > vpc_details.txt
+        echo "::set-env name=VPC_ID::$vpc_id"
 
     - name: Display ALB and VPC details
       run: |
@@ -46,4 +47,4 @@ jobs:
         echo ""
         echo "VPC Details:"
         echo -e "VPC ID\tCIDR Block"
-        cat vpc_details.txt
+        echo "${{ env.VPC_ID }}"
