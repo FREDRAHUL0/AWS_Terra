@@ -35,9 +35,17 @@ jobs:
 
           # Find the target group ARN based on the instance IDs
           target_group_arn=$(aws elbv2 describe-target-groups --query "TargetGroups[?contains(Tags[?Key=='Name' && Value=='prod'], 'true')].TargetGroupArn" --output text)
+          if [ -z "$target_group_arn" ]; then
+            echo "No target group found for the provided tag key-value pair."
+            exit 1
+          fi
 
           # Find the load balancers using the target group
           alb_arns=$(aws elbv2 describe-load-balancers --query "LoadBalancers[?contains(TargetGroups[].TargetGroupArn, '$target_group_arn')].{Name: LoadBalancerName, ARN: LoadBalancerArn, DNS: DNSName}" --output json)
+          if [ -z "$alb_arns" ]; then
+            echo "No ALB found using the target group."
+            exit 1
+          fi
 
           # Extract listener port and certificate details for HTTPS listeners
           for alb_arn in $(echo "$alb_arns" | jq -r '.[].ARN'); do
@@ -76,11 +84,4 @@ jobs:
                   
                   echo "ALB Members:"
                   targets=$(aws elbv2 describe-target-health --target-group-arn "$target_group_arn" --query "TargetHealthDescriptions[*].[Target.Id, TargetHealth.State]" --output json)
-                  for target in $(echo "$targets" | jq -c '.[]'); do
-                      target_id=$(echo "$target" | jq -r '.[0]')
-                      target_state=$(echo "$target" | jq -r '.[1]')
-                      echo "  Target ID: $target_id, State: $target_state"
-                  done
-                  echo ""
-              done
-          done
+                  for target in $(echo "$targets" | jq -c
