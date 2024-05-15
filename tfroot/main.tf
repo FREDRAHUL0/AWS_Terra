@@ -23,8 +23,11 @@ data "aws_vpc" "example_vpc" {
 }
 # Data source to fetch details about subnets in the specified VPC
 data "aws_subnet" "example_subnets" {
-  vpc_id = "vpc-0a0acf0ecf627f980"  # Replace with the ID of your VPC
+  vpc_id          = "vpc-0a0acf0ecf627f980"  # Replace with the ID of your VPC
+  availability_zone = "ap-south-1b"            # Specify the availability zone
+  cidr_block      = "10.0.32.0/20"            # Specify the CIDR block of the subnet
 }
+
 
 # Output the subnet IDs
 output "subnet_ids" {
