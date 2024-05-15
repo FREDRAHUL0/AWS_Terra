@@ -24,8 +24,19 @@ data "aws_vpc" "example_vpc" {
 
 data "aws_subnet" "example_subnets" {
   vpc_id = "vpc-0a0acf0ecf627f980"  # Replace with the ID of your VPC
- 
+
+  filters = [
+    {
+      name   = "availability-zone"
+      values = ["ap-south-1b"]  # Specify a single availability zone
+    },
+    {
+      name   = "tag:Environment"
+      values = ["PrivateSubnetB"]
+    }
+  ]
 }
+
 
 
 # Data source to fetch details about route tables associated with the VPC
