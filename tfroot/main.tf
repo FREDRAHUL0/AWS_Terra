@@ -51,19 +51,18 @@ data "aws_nat_gateway" "example_nat_gateways" {
 }
 
 # Output the subnet IDs
-output "subnet_id" {
-  value = data.aws_subnet.example_subnets.id
+output "subnet_ids" {
+  value = data.aws_subnet.example_subnets[*].id  # Use [*] to access all subnet IDs
 }
-
 
 # Output the route table IDs
 output "route_table_ids" {
-  value = data.aws_route_tables.example_route_tables.ids
+  value = data.aws_route_tables.example_route_tables[*].id  # Use [*] to access all route table IDs
 }
 
 # Output the NAT gateway IDs
-output "nat_gateway_id" {
-  value = data.aws_nat_gateway.example_nat_gateways.id
+output "nat_gateway_ids" {
+  value = data.aws_nat_gateway.example_nat_gateways[*].id  # Use [*] to access all NAT gateway IDs
 }
 
 # Output the ARN and DNS name of the ALB associated with the target group in table format
@@ -80,11 +79,11 @@ output "network_details" {
   value = format(
     "| %-20s | %-20s |\n|----------------------|----------------------|\n| %-20s | %-20s |\n| %-20s | %-20s |\n| %-20s | %-20s |\n| %-20s | %-20s |",
     "Subnet ID", "CIDR Block",
-    data.aws_subnet.example_subnets.id, data.aws_subnet.example_subnets.cidr_block,
+    join(", ", data.aws_subnet.example_subnets[*].id),  # Corrected attribute to "id"
+    join(", ", data.aws_subnet.example_subnets[*].cidr_block),  # Corrected attribute to "cidr_block"
     "Route Table IDs", "",
-    join(", ", data.aws_route_tables.example_route_tables.ids),
+    join(", ", data.aws_route_tables.example_route_tables[*].id),  # Use [*] to access all route table IDs
     "NAT Gateway IDs", "",
-    join(", ", data.aws_nat_gateway.example_nat_gateways[*].id)  # Corrected attribute to "id"
+    join(", ", data.aws_nat_gateway.example_nat_gateways[*].id)  # Use [*] to access all NAT gateway IDs
   )
 }
-
