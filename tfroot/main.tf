@@ -22,22 +22,26 @@ data "aws_vpc" "example_vpc" {
   id = "vpc-0a0acf0ecf627f980"  
 }
 
-data "aws_subnet" "example_subnets" {
+# Fetch all subnet IDs in the specified VPC
+data "aws_subnet_ids" "all_subnets" {
   vpc_id = "vpc-0a0acf0ecf627f980"  # Replace with the ID of your VPC
-
-  filters = [
-    {
-      name   = "availability-zone"
-      values = ["ap-south-1b"]  # Specify a single availability zone
-    },
-    {
-      name   = "tag:Environment"
-      values = ["PrivateSubnetB"]
-    }
-  ]
 }
 
+# Retrieve details of the subnets that match the desired criteria
+data "aws_subnet" "example_subnets" {
+  for_each = toset(data.aws_subnet_ids.all_subnets.ids)
 
+  subnet_id = each.key
+
+  # Use the subnet ID to retrieve additional details
+  depends_on = [data.aws_subnet_ids.all_subnets]
+
+  # Use conditional expressions to filter based on availability zone and tag
+  availability_zone = each.value != "" ? aws_subnet.each.value.availability_zone : null
+  tags = each.value != "" ? aws_subnet.each.value.tags : {}
+  
+  # Add more conditions here if required
+}
 
 # Data source to fetch details about route tables associated with the VPC
 data "aws_route_tables" "example_route_tables" {
