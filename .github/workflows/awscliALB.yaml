@@ -33,7 +33,7 @@ jobs:
           # Replace "prod" with the actual value of the server tag key-value pair.
           instance_ids=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=prod" --query "Reservations[*].Instances[*].InstanceId" --output json)
 
-          if [ -z "$instance_ids" ] || [ "$instance_ids" == "null" ]; then
+          if [ -z "$instance_ids" ] || [ "$(echo "$instance_ids" | jq length)" -eq 0 ]; then
             echo "No instances found with the provided tag key-value pair."
             exit 1
           fi
@@ -41,7 +41,7 @@ jobs:
           # Find the target group ARN based on the instance IDs
           target_group_arn=$(aws elbv2 describe-target-groups --query "TargetGroups[?contains(Tags[?Key=='Name' && Value=='prod'], 'true')].TargetGroupArn" --output json)
 
-          if [ -z "$target_group_arn" ] || [ "$target_group_arn" == "null" ]; then
+          if [ -z "$target_group_arn" ] || [ "$(echo "$target_group_arn" | jq length)" -eq 0 ]; then
             echo "No target group found for the provided tag key-value pair."
             exit 1
           fi
@@ -49,7 +49,7 @@ jobs:
           # Find the load balancers using the target group
           alb_arns=$(aws elbv2 describe-load-balancers --query "LoadBalancers[?contains(TargetGroups[].TargetGroupArn, '$target_group_arn')].{Name: LoadBalancerName, ARN: LoadBalancerArn, DNS: DNSName}" --output json)
 
-          if [ -z "$alb_arns" ] || [ "$alb_arns" == "null" ]; then
+          if [ -z "$alb_arns" ] || [ "$(echo "$alb_arns" | jq length)" -eq 0 ]; then
             echo "No ALB found using the target group."
             exit 1
           fi
@@ -58,7 +58,7 @@ jobs:
           for alb_arn in $(echo "$alb_arns" | jq -r '.[].ARN'); do
               https_listeners=$(aws elbv2 describe-listeners --load-balancer-arn "$alb_arn" --query "Listeners[?Port==\`443\`]" --output json)
 
-              if [ -z "$https_listeners" ] || [ "$https_listeners" == "null" ]; then
+              if [ -z "$https_listeners" ] || [ "$(echo "$https_listeners" | jq length)" -eq 0 ]; then
                 echo "No HTTPS listeners found for ALB $alb_name."
                 continue
               fi
@@ -71,7 +71,7 @@ jobs:
                   listener_arn=$(echo "$listener" | jq -r '.ListenerArn')
                   listener_rules=$(aws elbv2 describe-rules --listener-arn "$listener_arn" --query "Rules[*].[Priority, Actions]" --output json)
                   
-                  if [ -z "$listener_rules" ] || [ "$listener_rules" == "null" ]; then
+                  if [ -z "$listener_rules" ] || [ "$(echo "$listener_rules" | jq length)" -eq 0 ]; then
                     echo "No listener rules found for listener ARN $listener_arn."
                     continue
                   fi
@@ -96,27 +96,6 @@ jobs:
                   
                   echo "Certificate Details:"
                   certificate_arn=$(aws elbv2 describe-listener-certificates --listener-arn "$listener_arn" --query "Certificates[0].CertificateArn" --output json)
-                  if [ -z "$certificate_arn" ] || [ "$certificate_arn" == "null" ]; then
+                  if [ -z "$certificate_arn" ] || [ "$(echo "$certificate_arn" | jq length)" -eq 0 ]; then
                     echo "No certificate found for listener $listener_arn."
                     continue
-                  fi
-                  
-                  certificate_details=$(aws acm describe-certificate --certificate-arn "$certificate_arn" --query "Certificate.[DomainName,SubjectAlternativeNames[],NotBefore,NotAfter]" --output json)
-                  echo "$certificate_details"
-                  echo ""
-                  
-                  echo "ALB Members:"
-                  targets=$(aws elbv2 describe-target-health --target-group-arn "$target_group_arn" --query "TargetHealthDescriptions[*].[Target.Id, TargetHealth.State]" --output json)
-                  if [ -z "$targets" ] || [ "$targets" == "null" ]; then
-                    echo "No targets found for target group $target_group_arn."
-                    continue
-                  fi
-                  
-                  for target in $(echo "$targets" | jq -c '.[]'); do
-                      target_id=$(echo "$target" | jq -r '.[0]')
-                      target_state=$(echo "$target" | jq -r '.[1]')
-                      echo "  Target ID: $target_id, State: $target_state"
-                  done
-                  echo ""
-              done
-          done
