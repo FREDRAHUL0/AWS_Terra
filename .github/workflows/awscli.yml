@@ -30,14 +30,14 @@ jobs:
       id: get_alb_details
       run: |
         alb_arn=$(aws elbv2 describe-target-groups --target-group-arns ${{ env.TARGET_GROUP_ARN }} --query 'TargetGroups[0].LoadBalancerArns[0]' --output text)
-        echo "::set-env name=ALB_ARN::$alb_arn"
+        echo "ALB_ARN=$alb_arn" >> $GITHUB_ENV
         aws elbv2 describe-load-balancers --load-balancer-arns $alb_arn --query 'LoadBalancers[0].[LoadBalancerArn, DNSName, VpcId, AvailabilityZones]' --output text > alb_details.txt
       
     - name: Get VPC details
       id: get_vpc_details
       run: |
         vpc_id=$(awk '{print $3}' alb_details.txt)
-        echo "::set-env name=VPC_ID::$vpc_id"
+        echo "VPC_ID=$vpc_id" >> $GITHUB_ENV
 
     - name: Display ALB and VPC details
       run: |
