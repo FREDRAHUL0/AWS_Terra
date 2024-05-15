@@ -1,0 +1,39 @@
+name: Fetch ALB Details
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  fetch_alb_details:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-south-1
+    
+    - name: Get target group ARN
+      id: get_target_group_arn
+      run: |
+        target_group_arn=$(aws elbv2 describe-target-groups --names "terra-ALB-Tg" --query 'TargetGroups[0].TargetGroupArn' --output text)
+        echo "::set-output name=target_group_arn::$target_group_arn"
+      
+    - name: Get ALB details
+      id: get_alb_details
+      run: |
+        alb_arn=$(aws elbv2 describe-target-groups --target-group-arns ${{ steps.get_target_group_arn.outputs.target_group_arn }} --query 'TargetGroups[0].LoadBalancerArns[0]' --output text)
+        aws elbv2 describe-load-balancers --load-balancer-arns $alb_arn --output json | jq -r '.LoadBalancers[] | [.LoadBalancerArn, .DNSName, .VpcId, .AvailabilityZones | join(", ")] | @tsv' > alb_details.tsv
+      
+    - name: Display ALB details
+      run: |
+        echo "ALB Details:"
+        echo -e "Load Balancer ARN\tDNS Name\tVPC ID\tAvailability Zones"
+        cat alb_details.tsv
