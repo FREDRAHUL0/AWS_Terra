@@ -41,7 +41,7 @@ jobs:
           # Find the target group ARN based on the instance IDs
           target_group_arn=$(aws elbv2 describe-target-groups --query "TargetGroups[?contains(Tags[?Key=='Name' && Value=='prod'], 'true')].TargetGroupArn" --output json)
 
-          if [ -z "$target_group_arn" ]; then
+          if [ -z "$target_group_arn" ] || [ "$target_group_arn" == "null" ]; then
             echo "No target group found for the provided tag key-value pair."
             exit 1
           fi
@@ -49,7 +49,7 @@ jobs:
           # Find the load balancers using the target group
           alb_arns=$(aws elbv2 describe-load-balancers --query "LoadBalancers[?contains(TargetGroups[].TargetGroupArn, '$target_group_arn')].{Name: LoadBalancerName, ARN: LoadBalancerArn, DNS: DNSName}" --output json)
 
-          if [ -z "$alb_arns" ]; then
+          if [ -z "$alb_arns" ] || [ "$alb_arns" == "null" ]; then
             echo "No ALB found using the target group."
             exit 1
           fi
@@ -61,7 +61,7 @@ jobs:
               alb_name=$(echo "$alb_arns" | jq -r ".[] | select(.ARN == \"$alb_arn\").Name")
               alb_dns=$(echo "$alb_arns" | jq -r ".[] | select(.ARN == \"$alb_arn\").DNS")
               
-              if [ -z "$https_listeners" ]; then
+              if [ -z "$https_listeners" ] || [ "$https_listeners" == "null" ]; then
                 echo "No HTTPS listeners found for ALB $alb_name."
                 continue
               fi
@@ -91,7 +91,7 @@ jobs:
                   
                   echo "Certificate Details:"
                   certificate_arn=$(aws elbv2 describe-listener-certificates --listener-arn "$listener_arn" --query "Certificates[0].CertificateArn" --output json)
-                  if [ -z "$certificate_arn" ]; then
+                  if [ -z "$certificate_arn" ] || [ "$certificate_arn" == "null" ]; then
                     echo "No certificate found for listener $listener_arn."
                     continue
                   fi
