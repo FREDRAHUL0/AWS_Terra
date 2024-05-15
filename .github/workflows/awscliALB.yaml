@@ -71,6 +71,11 @@ jobs:
                   listener_arn=$(echo "$listener" | jq -r '.ListenerArn')
                   listener_rules=$(aws elbv2 describe-rules --listener-arn "$listener_arn" --query "Rules[*].[Priority, Actions]" --output json)
                   
+                  if [ -z "$listener_rules" ] || [ "$listener_rules" == "null" ]; then
+                    echo "No listener rules found for listener ARN $listener_arn."
+                    continue
+                  fi
+
                   echo "ALB Name: $alb_name, ARN: $alb_arn, DNS: $alb_dns"
                   echo "Listener Port: $listener_port"
                   
@@ -102,6 +107,16 @@ jobs:
                   
                   echo "ALB Members:"
                   targets=$(aws elbv2 describe-target-health --target-group-arn "$target_group_arn" --query "TargetHealthDescriptions[*].[Target.Id, TargetHealth.State]" --output json)
+                  if [ -z "$targets" ] || [ "$targets" == "null" ]; then
+                    echo "No targets found for target group $target_group_arn."
+                    continue
+                  fi
+                  
                   for target in $(echo "$targets" | jq -c '.[]'); do
                       target_id=$(echo "$target" | jq -r '.[0]')
-                      target
+                      target_state=$(echo "$target" | jq -r '.[1]')
+                      echo "  Target ID: $target_id, State: $target_state"
+                  done
+                  echo ""
+              done
+          done
