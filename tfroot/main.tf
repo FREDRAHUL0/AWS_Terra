@@ -22,11 +22,6 @@ data "aws_vpc" "example_vpc" {
   id = "vpc-0a0acf0ecf627f980"  
 }
 
-# Data source to fetch details about subnets in the specified VPC
-data "aws_subnet" "example_subnets" {
-  vpc_id = "vpc-0a0acf0ecf627f980"  # Replace with the ID of your VPC
-}
-
 # Data source to fetch details about route tables associated with the VPC
 data "aws_route_tables" "example_route_tables" {
   vpc_id = data.aws_vpc.example_vpc.id
