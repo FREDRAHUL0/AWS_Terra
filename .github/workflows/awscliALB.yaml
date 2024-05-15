@@ -48,40 +48,49 @@ jobs:
           fi
 
           # Extract listener port and certificate details for HTTPS listeners
-          for alb_arn in $(echo "$alb_arns" | jq -r '.[].ARN'); do
-              https_listeners=$(aws elbv2 describe-listeners --load-balancer-arn "$alb_arn" --query "Listeners[?Port==\`443\`]" --output json)
-              alb_name=$(echo "$alb_arns" | jq -r ".[] | select(.ARN == \"$alb_arn\").Name")
-              alb_dns=$(echo "$alb_arns" | jq -r ".[] | select(.ARN == \"$alb_arn\").DNS")
+          if [ -n "$alb_arns" ]; then
+            for alb_arn in $(echo "$alb_arns" | jq -r '.[].ARN'); do
+                https_listeners=$(aws elbv2 describe-listeners --load-balancer-arn "$alb_arn" --query "Listeners[?Port==\`443\`]" --output json)
+                alb_name=$(echo "$alb_arns" | jq -r ".[] | select(.ARN == \"$alb_arn\").Name")
+                alb_dns=$(echo "$alb_arns" | jq -r ".[] | select(.ARN == \"$alb_arn\").DNS")
               
-              for listener in $(echo "$https_listeners" | jq -c '.[]'); do
-                  listener_port=$(echo "$listener" | jq -r '.Port')
-                  listener_arn=$(echo "$listener" | jq -r '.ListenerArn')
-                  listener_rules=$(aws elbv2 describe-rules --listener-arn "$listener_arn" --query "Rules[*].[Priority, Actions]" --output json)
+                for listener in $(echo "$https_listeners" | jq -c '.[]'); do
+                    listener_port=$(echo "$listener" | jq -r '.Port')
+                    listener_arn=$(echo "$listener" | jq -r '.ListenerArn')
+                    listener_rules=$(aws elbv2 describe-rules --listener-arn "$listener_arn" --query "Rules[*].[Priority, Actions]" --output json)
                   
-                  echo "ALB Name: $alb_name, ARN: $alb_arn, DNS: $alb_dns"
-                  echo "Listener Port: $listener_port"
+                    echo "ALB Name: $alb_name, ARN: $alb_arn, DNS: $alb_dns"
+                    echo "Listener Port: $listener_port"
                   
-                  echo "Listener Rules:"
-                  for rule in $(echo "$listener_rules" | jq -c '.[]'); do
-                      rule_priority=$(echo "$rule" | jq -r '.[0]')
-                      rule_actions=$(echo "$rule" | jq -r '.[1]')
-                      echo "  Rule Priority: $rule_priority"
-                      echo "  Rule Actions:"
-                      for action in $(echo "$rule_actions" | jq -c '.[]'); do
-                          action_type=$(echo "$action" | jq -r '.Type')
-                          if [ "$action_type" == "forward" ]; then
-                              target_group_arn=$(echo "$action" | jq -r '.TargetGroupArn')
-                              echo "    Forward to Target Group ARN: $target_group_arn"
-                          fi
-                      done
-                  done
+                    echo "Listener Rules:"
+                    for rule in $(echo "$listener_rules" | jq -c '.[]'); do
+                        rule_priority=$(echo "$rule" | jq -r '.[0]')
+                        rule_actions=$(echo "$rule" | jq -r '.[1]')
+                        echo "  Rule Priority: $rule_priority"
+                        echo "  Rule Actions:"
+                        for action in $(echo "$rule_actions" | jq -c '.[]'); do
+                            action_type=$(echo "$action" | jq -r '.Type')
+                            if [ "$action_type" == "forward" ]; then
+                                target_group_arn=$(echo "$action" | jq -r '.TargetGroupArn')
+                                echo "    Forward to Target Group ARN: $target_group_arn"
+                            fi
+                        done
+                    done
                   
-                  echo "Certificate Details:"
-                  certificate_arn=$(aws elbv2 describe-listener-certificates --listener-arn "$listener_arn" --query "Certificates[0].CertificateArn" --output text)
-                  certificate_details=$(aws acm describe-certificate --certificate-arn "$certificate_arn" --query "Certificate.[DomainName,SubjectAlternativeNames[],NotBefore,NotAfter]" --output json)
-                  echo "$certificate_details"
-                  echo ""
+                    echo "Certificate Details:"
+                    certificate_arn=$(aws elbv2 describe-listener-certificates --listener-arn "$listener_arn" --query "Certificates[0].CertificateArn" --output text)
+                    certificate_details=$(aws acm describe-certificate --certificate-arn "$certificate_arn" --query "Certificate.[DomainName,SubjectAlternativeNames[],NotBefore,NotAfter]" --output json)
+                    echo "$certificate_details"
+                    echo ""
                   
-                  echo "ALB Members:"
-                  targets=$(aws elbv2 describe-target-health --target-group-arn "$target_group_arn" --query "TargetHealthDescriptions[*].[Target.Id, TargetHealth.State]" --output json)
-                  for target in $(echo "$targets" | jq -c
+                    echo "ALB Members:"
+                    targets=$(aws elbv2 describe-target-health --target-group-arn "$target_group_arn" --query "TargetHealthDescriptions[*].[Target.Id, TargetHealth.State]" --output json)
+                    for target in $(echo "$targets" | jq -c '.[]'); do
+                        target_id=$(echo "$target" | jq -r '.[0]')
+                        target_state=$(echo "$target" | jq -r '.[1]')
+                        echo "  Target ID: $target_id, State: $target_state"
+                    done
+                    echo ""
+                done
+            done
+          fi
